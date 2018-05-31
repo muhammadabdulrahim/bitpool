@@ -48,8 +48,10 @@ public:
     size_t GetMaxObjects() const;
 
 private:
-    const bool ELEMENT_FREE = 0;
-    const bool ELEMENT_IN_USE = 1;
+    const bool ELEMENT_FREE = false;
+    const bool ELEMENT_IN_USE = true;
+    const bool OBJECT_RETURN_FAIL = false;
+    const bool OBJECT_RETURN_SUCCESS = true;
     T *pTypeArray_;       //! The pointer to the contiguous array of [T]
     bool *inUseFlags_;    //! The pointer to the array of usage flags
     size_t poolSize_;     //! The size of the pool
@@ -95,27 +97,26 @@ T * BitPool<T>::GetObject()
 template <typename T>
 bool BitPool<T>::ReturnObject(T *pType)
 {
+    // If no objects are in use, fail
+    if (objectsInUse_ == 0) return OBJECT_RETURN_FAIL;
+
     // Get the index of the element in the pool, O(n) lookup
-    size_t index = poolSize_;
-    for (size_t i=0; i<poolSize_; i++ )
+    for (size_t index=0; index<poolSize_; index++ )
     {
-        if (pType == &pTypeArray_[i])
+        // Skip free memory
+        if (inUseFlags_[index] == ELEMENT_FREE) continue;
+
+        // If a match is found, mark object as free and return
+        if (pType == &pTypeArray_[index])
         {
-            index = i;
-            break;
+            objectsInUse_--;
+            inUseFlags_[index] = ELEMENT_FREE;
+            return OBJECT_RETURN_SUCCESS;
         }
     }
 
-    // If the object is not found, return false
-    if (index >= poolSize_) return false;
-
-    // If the object is already free, return false
-    if (inUseFlags_[index] == ELEMENT_FREE) return false;
-
-    // Mark the object at the index as free
-    objectsInUse_--;
-    inUseFlags_[index] = ELEMENT_FREE;
-    return true;
+    // As a fallback, fail
+    return OBJECT_RETURN_FAIL;
 }
 
 template <typename T>
