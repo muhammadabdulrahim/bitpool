@@ -51,6 +51,8 @@ private:
     T *pTypeArray_;       //! The pointer to the contiguous array of [T]
     bool *inUseFlags_;    //! The pointer to the array of usage flags
     size_t poolSize_;     //! The size of the pool
+    size_t objectsInUse_; //! The number of objects used in the pool
+    size_t activeIndex_;  //! The index of the free entry, circular reference
 };
 
 template <typename T>
@@ -59,6 +61,8 @@ BitPool<T>::BitPool(size_t poolSize)
     pTypeArray_ = new T[poolSize];
     inUseFlags_ = new bool[poolSize];
     poolSize_ = poolSize;
+    objectsInUse_ = 0;
+    activeIndex_ = 0;
 }
 
 template <typename T>
@@ -71,8 +75,13 @@ BitPool<T>::~BitPool()
 template <typename T>
 T * BitPool<T>::GetObject()
 {
-    //TODO
-    return nullptr;
+    if (objectsInUse_ >= poolSize_) return nullptr;
+    
+    T * ref = &pTypeArray_[activeIndex_];
+    objectsInUse_++;
+    inUseFlags_[activeIndex_] = true;
+    activeIndex_ = (activeIndex_ + 1) % poolSize_;
+    return ref;
 }
 
 template <typename T>
@@ -92,8 +101,7 @@ T * BitPool<T>::GetObjectAt(size_t index)
 template <typename T>
 size_t BitPool<T>::GetObjectsInUse() const
 {
-    //TODO
-    return 0;
+    return objectsInUse_;
 }
 
 template <typename T>
