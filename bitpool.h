@@ -49,19 +49,20 @@ public:
 
 private:
     T *pTypeArray_;       //! The pointer to the contiguous array of [T]
-    //TODO: add more internal control variables
+    size_t poolSize;      //! The size of the pool
 };
 
 template <typename T>
 BitPool<T>::BitPool(size_t poolSize) 
 {
-    //TODO
+    pTypeArray_ = (T)std::malloc(poolSize * sizeof(T));
+    this.poolSize = poolSize;
 }
 
 template <typename T>
 BitPool<T>::~BitPool() 
 {
-    //TODO
+    std::free(pTypeArray_);
 }
 
 template <typename T>
@@ -81,8 +82,8 @@ bool BitPool<T>::ReturnObject(T *pType)
 template <typename T>
 T * BitPool<T>::GetObjectAt(size_t index)
 {
-    //TODO
-    return nullptr;
+    if (index >= poolSize) return nullptr;
+    return pTypeArray_[index];
 }
 
 template <typename T>
@@ -95,8 +96,7 @@ size_t BitPool<T>::GetObjectsInUse() const
 template <typename T>
 size_t BitPool<T>::GetMaxObjects() const
 {
-    //TODO
-    return 0;
+    return poolSize;
 }
 
 #endif //__BITPOOL_H__
