@@ -85,7 +85,7 @@ T * BitPool<T>::GetObject()
     // Navigate the pool, circularly, until a free space is found
     while (inUseFlags_[activeIndex_] != ELEMENT_FREE)
     {
-        activeIndex_ = (activeIndex_ + 1 ) % poolSize_;
+        activeIndex_ = (activeIndex_ + 1) % poolSize_;
     }
 
     // Mark the object as in use and return a reference to it
@@ -101,7 +101,7 @@ bool BitPool<T>::ReturnObject(T *pType)
     if (objectsInUse_ == 0) return OBJECT_RETURN_FAIL;
 
     // Get the index of the element in the pool, O(n) lookup
-    for (size_t index=0; index<poolSize_; index++ )
+    for (size_t index=0; index<poolSize_; index++)
     {
         // Skip free memory
         if (inUseFlags_[index] == ELEMENT_FREE) continue;
