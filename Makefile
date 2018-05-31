@@ -13,5 +13,3 @@ clean:
 	rm -f $(objects)
 	rm -f $(appname)
 
-run:
-	./$(appname)
