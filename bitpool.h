@@ -9,6 +9,8 @@
 // when it either has not yet been retrieved by GetObject() or when it has 
 // been returned to the pool by ReturnObject().
 
+#include <iostream>
+
 template <typename T>
 class BitPool 
 {
@@ -53,15 +55,48 @@ private:
 template <typename T>
 BitPool<T>::BitPool(size_t poolSize) 
 {
-    //TODO: implement
+    //TODO
 }
 
 template <typename T>
 BitPool<T>::~BitPool() 
 {
-    //TODO: implement
+    //TODO
 }
 
-//TODO: implement the rest of the functions
+template <typename T>
+T * BitPool<T>::GetObject()
+{
+    //TODO
+    return nullptr;
+}
+
+template <typename T>
+bool BitPool<T>::ReturnObject(T *pType)
+{
+    //TODO
+    return false;
+}
+
+template <typename T>
+T * BitPool<T>::GetObjectAt(size_t index)
+{
+    //TODO
+    return nullptr;
+}
+
+template <typename T>
+size_t BitPool<T>::GetObjectsInUse() const
+{
+    //TODO
+    return 0;
+}
+
+template <typename T>
+size_t BitPool<T>::GetMaxObjects() const
+{
+    //TODO
+    return 0;
+}
 
 #endif //__BITPOOL_H__
