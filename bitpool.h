@@ -63,7 +63,7 @@ template <typename T>
 BitPool<T>::BitPool(size_t poolSize) 
 {
     pTypeArray_ = new T[poolSize]();
-    inUseFlags_ = new bool[poolSize]{false};
+    inUseFlags_ = new bool[poolSize]();
     poolSize_ = poolSize;
     objectsInUse_ = 0;
     activeIndex_ = 0;
