@@ -14,6 +14,8 @@
 template <typename T>
 class BitPool 
 {
+    typedef unsigned char flag;
+
 public:
     // Allocates a contiguous array of type [type]. Allocates some additional
     // things to keep track of BitPool state.
@@ -52,18 +54,47 @@ private:
     const bool ELEMENT_IN_USE = true;
     const bool OBJECT_RETURN_FAIL = false;
     const bool OBJECT_RETURN_SUCCESS = true;
+
+    // Set/unset the flag at the index
+    void SetFlagAtIndex_(size_t index, bool value);
+    // @returns The true/false value for the index in the array
+    bool GetFlagAtIndex_(size_t index) const;
+
     T *pTypeArray_;       //! The pointer to the contiguous array of [T]
-    bool *inUseFlags_;    //! The pointer to the array of usage flags
+    flag *inUseFlags_;    //! The pointer to the array of usage flags
     size_t poolSize_;     //! The size of the pool
     size_t objectsInUse_; //! The number of objects used in the pool
     size_t activeIndex_;  //! The index of the free entry, circular reference
 };
 
 template <typename T>
+void BitPool<T>::SetFlagAtIndex_(size_t index, bool value)
+{
+    size_t flagsArrayIndex = index / 8;
+    size_t flagsInnerMask = 1 << (index % 8);
+    if (value == ELEMENT_FREE)
+    {
+        inUseFlags_[flagsArrayIndex] &= ~flagsInnerMask;
+    }
+    else
+    {
+        inUseFlags_[flagsArrayIndex] |= flagsInnerMask;
+    }
+}
+
+template <typename T>
+bool BitPool<T>::GetFlagAtIndex_(size_t index) const
+{
+    size_t flagsArrayIndex = index / 8;
+    size_t flagsInnerMask = 1 << (index % 8);
+    return (inUseFlags_[flagsArrayIndex] & flagsInnerMask) > 0;
+}
+
+template <typename T>
 BitPool<T>::BitPool(size_t poolSize) 
 {
     pTypeArray_ = new T[poolSize]();
-    inUseFlags_ = new bool[poolSize]();
+    inUseFlags_ = new flag[(poolSize - 1) / 8 + 1]();
     poolSize_ = poolSize;
     objectsInUse_ = 0;
     activeIndex_ = 0;
@@ -83,14 +114,14 @@ T * BitPool<T>::GetObject()
     if (objectsInUse_ >= poolSize_) return nullptr;
     
     // Navigate the pool, circularly, until a free space is found
-    while (inUseFlags_[activeIndex_] != ELEMENT_FREE)
+    while (GetFlagAtIndex_(activeIndex_) != ELEMENT_FREE)
     {
         activeIndex_ = (activeIndex_ + 1) % poolSize_;
     }
 
     // Mark the object as in use and return a reference to it
     objectsInUse_++;
-    inUseFlags_[activeIndex_] = ELEMENT_IN_USE;
+    SetFlagAtIndex_(activeIndex_, ELEMENT_IN_USE);
     return &pTypeArray_[activeIndex_];
 }
 
@@ -104,13 +135,13 @@ bool BitPool<T>::ReturnObject(T *pType)
     for (size_t index=0; index<poolSize_; index++)
     {
         // Skip free memory
-        if (inUseFlags_[index] == ELEMENT_FREE) continue;
+        if (GetFlagAtIndex_(index) == ELEMENT_FREE) continue;
 
         // If a match is found, mark object as free and return
         if (pType == &pTypeArray_[index])
         {
             objectsInUse_--;
-            inUseFlags_[index] = ELEMENT_FREE;
+            SetFlagAtIndex_(index, ELEMENT_FREE);
             return OBJECT_RETURN_SUCCESS;
         }
     }
